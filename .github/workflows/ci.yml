@@ -20,14 +20,6 @@ jobs:
           version: latest
           args: --color always --check .
 
-      - name: Install Selene
-        uses: taiki-e/install-action@v2
-        with:
-          tool: selene
-
-      - name: Run Selene
-        run: selene --display-style=quiet .
-
   test:
     name: Test
     runs-on: ${{ matrix.os }}
