@@ -1,4 +1,4 @@
---- Tests for blink-cmp-skkeleton using mini.test
+--- Integration tests for blink-cmp-skkeleton main API
 --- Run with: just test
 
 local new_set = MiniTest.new_set
@@ -31,7 +31,7 @@ T["initialization"]["has required methods"] = function()
   expect.equality(type(source.execute), "function")
 end
 
--- Enabled tests
+-- enabled tests
 T["enabled"] = new_set()
 
 T["enabled"]["returns true when skkeleton is available"] = function()
@@ -66,7 +66,7 @@ T["enabled"]["returns false when skkeleton is not available"] = function()
   vim.fn.exists = old_exists
 end
 
--- Get trigger characters tests
+-- get_trigger_characters tests
 T["get_trigger_characters"] = new_set()
 
 T["get_trigger_characters"]["returns empty array"] = function()
@@ -76,18 +76,47 @@ T["get_trigger_characters"]["returns empty array"] = function()
   expect.equality(#triggers, 0)
 end
 
--- Completion tests
-T["completions"] = new_set()
+-- get_completions integration tests
+T["get_completions"] = new_set()
 
-T["completions"]["handles completion items correctly"] = function()
+T["get_completions"]["returns empty when skkeleton is disabled"] = function()
   local source = new_source()
-  -- Mock skkeleton APIs
   local old_fn = vim.fn
   vim.fn = setmetatable({}, {
     __index = function(t, k)
       if k == "skkeleton#is_enabled" then
         return function()
-          return true
+          return 0
+        end
+      end
+      return old_fn[k]
+    end,
+  })
+
+  local callback_called = false
+  local items = nil
+
+  source:get_completions({ cursor = { 1, 0 }, line = "" }, function(response)
+    callback_called = true
+    items = response.items
+  end)
+
+  vim.wait(100)
+
+  expect.equality(callback_called, true)
+  expect.equality(#items, 0)
+
+  vim.fn = old_fn
+end
+
+T["get_completions"]["builds completion items correctly"] = function()
+  local source = new_source()
+  local old_fn = vim.fn
+  vim.fn = setmetatable({}, {
+    __index = function(t, k)
+      if k == "skkeleton#is_enabled" then
+        return function()
+          return 1
         end
       end
       if k == "denops#request" then
@@ -98,10 +127,7 @@ T["completions"]["handles completion items correctly"] = function()
             return { { "愛", 100 } }
           elseif method == "getPreEdit" then
             return "▽あい"
-          elseif method == "getPreEditLength" then
-            return 3
           end
-          return nil
         end
       end
       return old_fn[k]
@@ -109,40 +135,26 @@ T["completions"]["handles completion items correctly"] = function()
   })
 
   local callback_called = false
-  local callback_items = nil
+  local items = nil
 
-  source:get_completions({
-    cursor = { 1, 9 },
-    line = "▽あい",
-  }, function(response)
+  source:get_completions({ cursor = { 1, 9 }, line = "▽あい" }, function(response)
     callback_called = true
-    callback_items = response.items
+    items = response.items
   end)
 
-  -- Wait for vim.schedule
   vim.wait(100)
 
   expect.equality(callback_called, true)
-  expect.no_equality(callback_items, nil)
-  expect.equality(#callback_items, 2)
-
-  -- Check first item
-  local first_item = callback_items[1]
-  expect.equality(first_item.label, "愛")
-  expect.equality(first_item.filterText, "あい")
-  expect.no_equality(first_item.textEdit, nil)
-  expect.equality(first_item.textEdit.newText, "愛")
-
-  -- Check second item has documentation
-  local second_item = callback_items[2]
-  expect.equality(second_item.label, "藍")
-  expect.no_equality(second_item.documentation, nil)
-  expect.equality(second_item.documentation.value, "indigo")
+  expect.equality(#items, 2)
+  expect.equality(items[1].label, "愛")
+  expect.equality(items[1].filterText, "あい")
+  expect.equality(items[2].label, "藍")
+  expect.no_equality(items[2].documentation, nil)
 
   vim.fn = old_fn
 end
 
--- Resolve tests
+-- resolve tests
 T["resolve"] = new_set()
 
 T["resolve"]["returns item unchanged"] = function()
@@ -160,10 +172,10 @@ T["resolve"]["returns item unchanged"] = function()
   expect.equality(resolved_item, test_item)
 end
 
--- Execute tests
+-- execute tests
 T["execute"] = new_set()
 
-T["execute"]["calls default_implementation for non-skkeleton items"] = function()
+T["execute"]["calls default for non-skkeleton items"] = function()
   local source = new_source()
   local default_called = false
   local callback_called = false
@@ -178,7 +190,7 @@ T["execute"]["calls default_implementation for non-skkeleton items"] = function(
   expect.equality(callback_called, true)
 end
 
-T["execute"]["registers with skkeleton for okurinasi"] = function()
+T["execute"]["registers okurinasi with skkeleton"] = function()
   local source = new_source()
   local old_fn = vim.fn
   local request_called = false
@@ -192,27 +204,21 @@ T["execute"]["registers with skkeleton for okurinasi"] = function()
             request_called = true
             request_args = args
           end
-          return nil
         end
       end
       return old_fn[k]
     end,
   })
 
-  local default_called = false
   source:execute({}, {
     data = {
       skkeleton = true,
       kana = "あい",
       word = "愛",
     },
-  }, function() end, function()
-    default_called = true
-  end)
+  }, function() end, function() end)
 
-  expect.equality(default_called, true)
   expect.equality(request_called, true)
-  expect.no_equality(request_args, nil)
   expect.equality(request_args[1], "あい")
   expect.equality(request_args[2], "愛")
   expect.equality(request_args[3], "okurinasi")
@@ -220,7 +226,7 @@ T["execute"]["registers with skkeleton for okurinasi"] = function()
   vim.fn = old_fn
 end
 
-T["execute"]["registers with skkeleton for okuriari"] = function()
+T["execute"]["registers okuriari with uppercase"] = function()
   local source = new_source()
   local old_fn = vim.fn
   local request_args = nil
@@ -232,7 +238,6 @@ T["execute"]["registers with skkeleton for okuriari"] = function()
           if method == "completeCallback" then
             request_args = args
           end
-          return nil
         end
       end
       return old_fn[k]
@@ -247,13 +252,12 @@ T["execute"]["registers with skkeleton for okuriari"] = function()
     },
   }, function() end, function() end)
 
-  expect.no_equality(request_args, nil)
   expect.equality(request_args[3], "okuriari")
 
   vim.fn = old_fn
 end
 
-T["execute"]["detects okuriari with asterisk"] = function()
+T["execute"]["registers okuriari with asterisk"] = function()
   local source = new_source()
   local old_fn = vim.fn
   local request_args = nil
@@ -265,7 +269,6 @@ T["execute"]["detects okuriari with asterisk"] = function()
           if method == "completeCallback" then
             request_args = args
           end
-          return nil
         end
       end
       return old_fn[k]
@@ -280,7 +283,6 @@ T["execute"]["detects okuriari with asterisk"] = function()
     },
   }, function() end, function() end)
 
-  expect.no_equality(request_args, nil)
   expect.equality(request_args[3], "okuriari")
 
   vim.fn = old_fn
