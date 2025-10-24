@@ -64,7 +64,7 @@ Native [blink.cmp](https://github.com/saghen/blink.cmp) source for [skkeleton](h
 
 ### Skkeleton Configuration
 
-Configure skkeleton to work with blink.cmp:
+Configure skkeleton with your preferred settings:
 
 ```lua
 {
@@ -81,32 +81,11 @@ Configure skkeleton to work with blink.cmp:
     -- Key mappings
     vim.keymap.set("i", "<C-j>", "<Plug>(skkeleton-enable)")
     vim.keymap.set("c", "<C-j>", "<Plug>(skkeleton-enable)")
-
-    -- Integration with blink.cmp
-    vim.api.nvim_create_autocmd("User", {
-      pattern = "skkeleton-enable-pre",
-      callback = function()
-        local ok, blink_cmp = pcall(require, "blink.cmp")
-        if ok then
-          vim.schedule(function() blink_cmp.show() end)
-        end
-      end,
-    })
-
-    vim.api.nvim_create_autocmd("TextChangedI", {
-      callback = function()
-        if vim.fn.exists("*skkeleton#is_enabled") == 0 then return end
-        if vim.fn["skkeleton#is_enabled"]() ~= 1 then return end
-
-        local ok, blink_cmp = pcall(require, "blink.cmp")
-        if ok then
-          vim.schedule(function() blink_cmp.show() end)
-        end
-      end,
-    })
   end,
 }
 ```
+
+> **Note**: The plugin automatically sets up autocmds to integrate with blink.cmp. If you want to disable this and manage autocmds yourself, set `vim.g.blink_cmp_skkeleton_auto_setup = false` before the plugin loads.
 
 ## Usage
 
@@ -150,19 +129,26 @@ Type: `▽おくr` → `▽おく*り`
 
 ```
 lua/blink-cmp-skkeleton/
-└── init.lua          # Main source implementation
+├── init.lua          # Main source implementation
+├── utils.lua         # Utility functions
+├── skkeleton.lua     # Skkeleton/denops communication
+└── completion.lua    # Completion item building
+plugin/
+└── blink-cmp-skkeleton.lua  # Auto-setup autocmds
 ```
 
 ### Helper Functions
 
-- `safe_call()`: Safely call vim functions with error handling
-- `request()`: Request data from skkeleton via denops
-- `convert_ranks_to_map()`: Convert ranks array to lookup table
-- `build_text_edit_range()`: Calculate LSP TextEdit range
-- `parse_word()`: Extract label and info from word string
-- `build_completion_item()`: Build a single completion item
-- `build_completion_items()`: Build all completion items
-- `determine_henkan_type()`: Detect okurinasi vs okuriari
+- `utils.safe_call()`: Safely call vim functions with error handling
+- `utils.parse_word()`: Extract label and info from word string
+- `utils.determine_henkan_type()`: Detect okurinasi vs okuriari
+- `skkeleton.is_enabled()`: Check if skkeleton is active
+- `skkeleton.get_completion_data()`: Request data from skkeleton via denops
+- `skkeleton.register_completion()`: Register completion for dictionary learning
+- `completion.convert_ranks_to_map()`: Convert ranks array to lookup table
+- `completion.build_text_edit_range()`: Calculate LSP TextEdit range
+- `completion.build_completion_item()`: Build a single completion item
+- `completion.build_completion_items()`: Build all completion items
 
 ### Source Methods
 
@@ -201,25 +187,31 @@ This information is passed to skkeleton's `completeCallback` for proper dictiona
 
 ### Running Tests
 
-Requirements: [plenary.nvim](https://github.com/nvim-lua/plenary.nvim)
+Requirements: [mini.nvim](https://github.com/echasnovski/mini.nvim) (mini.test)
 
 ```bash
 # Clone the repository
 git clone https://github.com/Xantibody/blink-cmp-skkeleton
 cd blink-cmp-skkeleton
 
+# Install test dependencies
+just deps-mini-nvim
+
 # Run tests
-nvim --headless -u tests/minimal_init.lua -c "PlenaryBustedDirectory tests/" -c "qa"
+just test
 ```
 
 ### Test Coverage
 
-- ✅ Source initialization
+- ✅ Source initialization and API methods
 - ✅ Enabled/disabled states
-- ✅ Completion item generation
+- ✅ Completion item generation and building
 - ✅ Okurinasi/okuriari detection
 - ✅ Dictionary learning integration
-- ✅ textEdit range calculation
+- ✅ TextEdit range calculation
+- ✅ Utility functions (parse_word, safe_call)
+- ✅ Skkeleton communication (denops requests)
+- ✅ Rank conversion and sorting
 
 ## Comparison with Other Implementations
 
