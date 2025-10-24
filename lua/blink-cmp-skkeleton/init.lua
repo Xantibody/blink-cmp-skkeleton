@@ -10,6 +10,13 @@ local completion = require("blink-cmp-skkeleton.completion")
 --- @class blink.cmp.Source
 local source = {}
 
+--- Check if skkeleton is currently enabled
+--- This is a public helper function for use in sources.default configuration
+--- @return boolean
+function source.is_enabled()
+  return skkeleton.is_enabled()
+end
+
 --- Create a new source instance
 --- @param opts? table Options
 --- @return blink.cmp.Source
