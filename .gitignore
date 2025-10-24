@@ -1,0 +1,20 @@
+# Vim/Neovim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Lua
+luac.out
+
+# Test coverage
+coverage/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.code-workspace
