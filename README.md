@@ -40,10 +40,7 @@ Native [blink.cmp](https://github.com/saghen/blink.cmp) source for [skkeleton](h
     sources = {
       -- Dynamically select sources based on skkeleton state
       default = function(ctx)
-        local ok, result = pcall(vim.fn["skkeleton#is_enabled"])
-        local skkeleton_enabled = ok and (result == true or result == 1)
-
-        if skkeleton_enabled then
+        if require("blink-cmp-skkeleton").is_enabled() then
           return { "skkeleton" }
         else
           return { "lsp", "path", "snippets", "buffer" }
