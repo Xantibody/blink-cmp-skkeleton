@@ -66,6 +66,66 @@ T["enabled"]["returns false when skkeleton is not available"] = function()
   vim.fn.exists = old_exists
 end
 
+-- is_enabled static helper tests
+T["is_enabled"] = new_set()
+
+T["is_enabled"]["returns true when skkeleton is enabled"] = function()
+  local old_fn = vim.fn
+  vim.fn = setmetatable({}, {
+    __index = function(t, k)
+      if k == "skkeleton#is_enabled" then
+        return function()
+          return 1
+        end
+      end
+      return old_fn[k]
+    end,
+  })
+
+  local result = source_module.is_enabled()
+  expect.equality(result, true)
+
+  vim.fn = old_fn
+end
+
+T["is_enabled"]["returns false when skkeleton is disabled"] = function()
+  local old_fn = vim.fn
+  vim.fn = setmetatable({}, {
+    __index = function(t, k)
+      if k == "skkeleton#is_enabled" then
+        return function()
+          return 0
+        end
+      end
+      return old_fn[k]
+    end,
+  })
+
+  local result = source_module.is_enabled()
+  expect.equality(result, false)
+
+  vim.fn = old_fn
+end
+
+T["is_enabled"]["returns false on error"] = function()
+  local old_fn = vim.fn
+  vim.fn = setmetatable({}, {
+    __index = function(t, k)
+      if k == "skkeleton#is_enabled" then
+        return function()
+          error("test error")
+        end
+      end
+      return old_fn[k]
+    end,
+  })
+
+  local result = source_module.is_enabled()
+  expect.equality(result, false)
+
+  vim.fn = old_fn
+end
+
 -- get_trigger_characters tests
 T["get_trigger_characters"] = new_set()
 
