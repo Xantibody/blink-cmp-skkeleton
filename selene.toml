@@ -1,0 +1,7 @@
+std = "vim"
+
+[lints]
+# Allow mixed tables (array and hash parts)
+mixed_table = "allow"
+# Allow unused variables (common in callback functions)
+unused_variable = "allow"
