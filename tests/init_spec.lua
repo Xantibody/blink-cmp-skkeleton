@@ -105,16 +105,13 @@ describe("blink-cmp-skkeleton", function()
       local callback_called = false
       local callback_items = nil
 
-      source:get_completions(
-        {
-          cursor = { 1, 9 }, -- line 1, byte position 9
-          line = "▽あい",
-        },
-        function(response)
-          callback_called = true
-          callback_items = response.items
-        end
-      )
+      source:get_completions({
+        cursor = { 1, 9 }, -- line 1, byte position 9
+        line = "▽あい",
+      }, function(response)
+        callback_called = true
+        callback_items = response.items
+      end)
 
       -- Wait for vim.schedule
       vim.wait(100)
@@ -197,20 +194,15 @@ describe("blink-cmp-skkeleton", function()
       })
 
       local default_called = false
-      source:execute(
-        {},
-        {
-          data = {
-            skkeleton = true,
-            kana = "あい",
-            word = "愛",
-          },
+      source:execute({}, {
+        data = {
+          skkeleton = true,
+          kana = "あい",
+          word = "愛",
         },
-        function() end,
-        function()
-          default_called = true
-        end
-      )
+      }, function() end, function()
+        default_called = true
+      end)
 
       assert.is_true(default_called)
       assert.is_true(request_called)
@@ -240,18 +232,13 @@ describe("blink-cmp-skkeleton", function()
         end,
       })
 
-      source:execute(
-        {},
-        {
-          data = {
-            skkeleton = true,
-            kana = "おくR", -- Uppercase R indicates okuriari
-            word = "送る",
-          },
+      source:execute({}, {
+        data = {
+          skkeleton = true,
+          kana = "おくR", -- Uppercase R indicates okuriari
+          word = "送る",
         },
-        function() end,
-        function() end
-      )
+      }, function() end, function() end)
 
       assert.is_not_nil(request_args)
       assert.equals("okuriari", request_args[3])
@@ -277,18 +264,13 @@ describe("blink-cmp-skkeleton", function()
         end,
       })
 
-      source:execute(
-        {},
-        {
-          data = {
-            skkeleton = true,
-            kana = "おく*り",
-            word = "送り",
-          },
+      source:execute({}, {
+        data = {
+          skkeleton = true,
+          kana = "おく*り",
+          word = "送り",
         },
-        function() end,
-        function() end
-      )
+      }, function() end, function() end)
 
       assert.is_not_nil(request_args)
       assert.equals("okuriari", request_args[3])

@@ -1,0 +1,15 @@
+[lints]
+# Allow mixed tables (array and hash parts)
+mixed_table = "allow"
+# Allow unused variables (common in callback functions)
+unused_variable = "allow"
+
+[[globals]]
+# Neovim globals
+vim = { fields = true }
+# Busted testing globals
+describe = { fields = false }
+it = { fields = false }
+before_each = { fields = false }
+after_each = { fields = false }
+assert = { fields = true }
