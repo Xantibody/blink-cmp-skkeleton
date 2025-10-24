@@ -1,17 +1,20 @@
---- Minimal init for running tests
---- This sets up the minimal environment needed for testing
+--- Minimal init for running tests with mini.test
 
 -- Add current plugin directory to runtime path
 vim.opt.runtimepath:prepend(vim.fn.getcwd())
 
--- Add plenary to the runtime path (for testing)
-local plenary_path = vim.fn.stdpath("data") .. "/lazy/plenary.nvim"
-if vim.fn.isdirectory(plenary_path) == 1 then
-  vim.opt.runtimepath:append(plenary_path)
+-- Add mini.nvim to the runtime path
+local mini_path = vim.fn.getcwd() .. "/.deps/mini.nvim"
+if vim.fn.isdirectory(mini_path) == 1 then
+  vim.opt.runtimepath:append(mini_path)
 else
-  print("Warning: plenary.nvim not found at " .. plenary_path)
-  print("Install it with: git clone https://github.com/nvim-lua/plenary.nvim " .. plenary_path)
+  print("Warning: mini.nvim not found at " .. mini_path)
+  print("Install it with: just deps-mini-nvim")
+  vim.cmd("cquit 1")
 end
+
+-- Set up mini.test
+require("mini.test").setup()
 
 -- Mock LSP protocol if not available
 if not vim.lsp or not vim.lsp.protocol then
