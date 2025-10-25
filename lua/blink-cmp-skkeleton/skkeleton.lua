@@ -7,9 +7,9 @@ local M = {}
 
 -- Cache storage
 local cache = {
-  key = nil,      -- Cache key (pre_edit)
-  data = nil,     -- Cached data
-  timestamp = 0,  -- Cache creation time
+  key = nil, -- Cache key (pre_edit)
+  data = nil, -- Cached data
+  timestamp = 0, -- Cache creation time
 }
 
 -- Cache TTL in milliseconds
