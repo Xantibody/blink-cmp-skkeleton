@@ -286,4 +286,137 @@ T["register_completion"]["calls denops request"] = function()
   skkeleton.clear_cache()
 end
 
+-- Cache configuration tests
+T["cache configuration"] = new_set()
+
+T["cache configuration"]["uses custom TTL from vim.g"] = function()
+  local old_fn = vim.fn
+  local old_g = vim.g.blink_cmp_skkeleton_cache_ttl
+  local old_loop = vim.loop
+
+  -- Set custom TTL to 50ms
+  vim.g.blink_cmp_skkeleton_cache_ttl = 50
+
+  local current_time = 0
+  vim.loop = {
+    now = function()
+      return current_time
+    end,
+  }
+
+  vim.fn = setmetatable({}, {
+    __index = function(t, k)
+      if k == "denops#request" then
+        return function(plugin, method, args)
+          if method == "getPreEdit" then
+            return "▽あい"
+          elseif method == "getCompletionResult" then
+            return { { "あい", { "愛" } } }
+          elseif method == "getRanks" then
+            return {}
+          end
+        end
+      end
+      return old_fn[k]
+    end,
+  })
+
+  -- First call at t=0
+  current_time = 0
+  skkeleton.clear_cache()
+  skkeleton.get_completion_data()
+
+  -- After 40ms (within 50ms TTL) - should be cache hit
+  current_time = 40
+  local c1, r1, p1 = skkeleton.get_completion_data()
+  expect.equality(p1, "▽あい") -- Should use cache
+
+  -- After 60ms (beyond 50ms TTL) - should be cache miss
+  current_time = 60
+  local c2, r2, p2 = skkeleton.get_completion_data()
+  expect.equality(p2, "▽あい") -- Should refetch
+
+  vim.fn = old_fn
+  vim.loop = old_loop
+  vim.g.blink_cmp_skkeleton_cache_ttl = old_g
+  skkeleton.clear_cache()
+end
+
+-- Cache metrics tests
+T["cache metrics"] = new_set()
+
+T["cache metrics"]["tracks hit and miss counts"] = function()
+  local old_fn = vim.fn
+
+  vim.fn = setmetatable({}, {
+    __index = function(t, k)
+      if k == "denops#request" then
+        return function(plugin, method, args)
+          if method == "getPreEdit" then
+            return "▽あい"
+          elseif method == "getCompletionResult" then
+            return { { "あい", { "愛" } } }
+          elseif method == "getRanks" then
+            return {}
+          end
+        end
+      end
+      return old_fn[k]
+    end,
+  })
+
+  skkeleton.clear_cache()
+  local stats = skkeleton.get_cache_stats()
+  local initial_hits = stats.hits
+  local initial_misses = stats.misses
+
+  -- First call: miss
+  skkeleton.get_completion_data()
+  stats = skkeleton.get_cache_stats()
+  expect.equality(stats.misses, initial_misses + 1)
+
+  -- Second call: hit
+  skkeleton.get_completion_data()
+  stats = skkeleton.get_cache_stats()
+  expect.equality(stats.hits, initial_hits + 1)
+
+  vim.fn = old_fn
+  skkeleton.clear_cache()
+end
+
+T["cache metrics"]["calculates hit rate correctly"] = function()
+  local old_fn = vim.fn
+
+  vim.fn = setmetatable({}, {
+    __index = function(t, k)
+      if k == "denops#request" then
+        return function(plugin, method, args)
+          if method == "getPreEdit" then
+            return "▽あい"
+          elseif method == "getCompletionResult" then
+            return { { "あい", { "愛" } } }
+          elseif method == "getRanks" then
+            return {}
+          end
+        end
+      end
+      return old_fn[k]
+    end,
+  })
+
+  skkeleton.clear_cache()
+
+  -- 1 miss + 3 hits = 75% hit rate
+  skkeleton.get_completion_data() -- miss
+  skkeleton.get_completion_data() -- hit
+  skkeleton.get_completion_data() -- hit
+  skkeleton.get_completion_data() -- hit
+
+  local stats = skkeleton.get_cache_stats()
+  expect.equality(stats.hit_rate >= 74 and stats.hit_rate <= 76, true) -- Allow for floating point
+
+  vim.fn = old_fn
+  skkeleton.clear_cache()
+end
+
 return T

@@ -12,8 +12,14 @@ local cache = {
   timestamp = 0, -- Cache creation time
 }
 
--- Cache TTL in milliseconds
-local CACHE_TTL_MS = 100
+-- Cache statistics
+local cache_stats = {
+  hits = 0,
+  misses = 0,
+}
+
+-- Cache TTL in milliseconds (configurable via vim.g.blink_cmp_skkeleton_cache_ttl)
+local CACHE_TTL_MS = vim.g.blink_cmp_skkeleton_cache_ttl or 100
 
 --- Request data from skkeleton via denops
 --- @param key string
@@ -48,11 +54,24 @@ local function set_cache(key, data)
   cache.timestamp = vim.loop.now()
 end
 
---- Clear cache (public for testing)
+--- Clear cache and reset statistics (public for testing)
 function M.clear_cache()
   cache.key = nil
   cache.data = nil
   cache.timestamp = 0
+  cache_stats.hits = 0
+  cache_stats.misses = 0
+end
+
+--- Get cache statistics
+--- @return table stats { hits: number, misses: number, hit_rate: number }
+function M.get_cache_stats()
+  local total = cache_stats.hits + cache_stats.misses
+  return {
+    hits = cache_stats.hits,
+    misses = cache_stats.misses,
+    hit_rate = total > 0 and (cache_stats.hits / total * 100) or 0,
+  }
 end
 
 --- Check if skkeleton is available and enabled
@@ -70,11 +89,17 @@ function M.get_completion_data()
 
   -- Step 2: Check cache
   if is_cache_valid(pre_edit) then
-    utils.debug_log(string.format("Cache HIT for '%s'", pre_edit))
+    cache_stats.hits = cache_stats.hits + 1
+    local total = cache_stats.hits + cache_stats.misses
+    local hit_rate = cache_stats.hits / total * 100
+    utils.debug_log(
+      string.format("Cache HIT for '%s' (total: %d/%d, %.1f%%)", pre_edit, cache_stats.hits, total, hit_rate)
+    )
     return cache.data.candidates, cache.data.ranks, cache.data.pre_edit
   end
 
   -- Step 3: Cache miss - fetch data
+  cache_stats.misses = cache_stats.misses + 1
   utils.debug_log(string.format("Cache MISS for '%s', fetching...", pre_edit))
 
   local candidates = request("getCompletionResult") or {}
