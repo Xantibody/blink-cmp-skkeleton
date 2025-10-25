@@ -125,6 +125,134 @@ T["get_completion_data"]["returns empty data on error"] = function()
   vim.fn = old_fn
 end
 
+-- Cache tests
+T["get_completion_data cache"] = new_set()
+
+T["get_completion_data cache"]["caches result for same pre_edit"] = function()
+  local old_fn = vim.fn
+  local denops_call_count = 0
+
+  vim.fn = setmetatable({}, {
+    __index = function(t, k)
+      if k == "denops#request" then
+        return function(plugin, method, args)
+          denops_call_count = denops_call_count + 1
+          if method == "getCompletionResult" then
+            return { { "あい", { "愛", "藍" } } }
+          elseif method == "getRanks" then
+            return { { "愛", 100 } }
+          elseif method == "getPreEdit" then
+            return "▽あい"
+          end
+        end
+      end
+      return old_fn[k]
+    end,
+  })
+
+  -- First call: cache miss (3 RPC calls)
+  denops_call_count = 0
+  local c1, r1, p1 = skkeleton.get_completion_data()
+  local first_call_count = denops_call_count
+  expect.equality(first_call_count, 3) -- getPreEdit + getCompletionResult + getRanks
+
+  -- Second call: cache hit (only 1 RPC call - getPreEdit to check key)
+  denops_call_count = 0
+  local c2, r2, p2 = skkeleton.get_completion_data()
+  local second_call_count = denops_call_count
+  expect.equality(second_call_count, 1) -- only getPreEdit
+
+  -- Data should be same
+  expect.equality(#c1, #c2)
+  expect.equality(p1, p2)
+
+  vim.fn = old_fn
+  skkeleton.clear_cache()
+end
+
+T["get_completion_data cache"]["invalidates cache on pre_edit change"] = function()
+  local old_fn = vim.fn
+  local pre_edit_value = "▽あい"
+
+  vim.fn = setmetatable({}, {
+    __index = function(t, k)
+      if k == "denops#request" then
+        return function(plugin, method, args)
+          if method == "getPreEdit" then
+            return pre_edit_value
+          elseif method == "getCompletionResult" then
+            return { { pre_edit_value:sub(4), { "test" } } }
+          elseif method == "getRanks" then
+            return {}
+          end
+        end
+      end
+      return old_fn[k]
+    end,
+  })
+
+  -- First call
+  local c1, r1, p1 = skkeleton.get_completion_data()
+  expect.equality(p1, "▽あい")
+
+  -- Change pre_edit
+  pre_edit_value = "▽あいう"
+
+  -- Second call: cache miss (different pre_edit)
+  local c2, r2, p2 = skkeleton.get_completion_data()
+  expect.equality(p2, "▽あいう")
+  expect.no_equality(p1, p2)
+
+  vim.fn = old_fn
+  skkeleton.clear_cache()
+end
+
+T["get_completion_data cache"]["clears cache after register_completion"] = function()
+  local old_fn = vim.fn
+  local denops_call_count = 0
+
+  vim.fn = setmetatable({}, {
+    __index = function(t, k)
+      if k == "denops#request" then
+        return function(plugin, method, args)
+          if method ~= "completeCallback" then
+            denops_call_count = denops_call_count + 1
+          end
+          if method == "getPreEdit" then
+            return "▽あい"
+          elseif method == "getCompletionResult" then
+            return { { "あい", { "愛" } } }
+          elseif method == "getRanks" then
+            return { { "愛", 100 } }
+          end
+        end
+      end
+      return old_fn[k]
+    end,
+  })
+
+  -- Populate cache
+  denops_call_count = 0
+  skkeleton.get_completion_data()
+  expect.equality(denops_call_count, 3)
+
+  -- Verify cache works
+  denops_call_count = 0
+  skkeleton.get_completion_data()
+  expect.equality(denops_call_count, 1) -- cache hit
+
+  -- Register completion (should clear cache)
+  skkeleton.register_completion("あい", "愛", "okurinasi")
+
+  -- Next call should be cache miss
+  denops_call_count = 0
+  skkeleton.get_completion_data()
+  expect.equality(denops_call_count, 3) -- cache was cleared
+
+  vim.fn = old_fn
+  skkeleton.clear_cache()
+end
+
 -- register_completion tests
 T["register_completion"] = new_set()
 
@@ -155,6 +283,7 @@ T["register_completion"]["calls denops request"] = function()
   expect.equality(call_args[3], "okurinasi")
 
   vim.fn = old_fn
+  skkeleton.clear_cache()
 end
 
 return T
