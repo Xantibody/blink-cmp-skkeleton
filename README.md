@@ -2,7 +2,7 @@
 
 Native [blink.cmp](https://github.com/saghen/blink.cmp) source for [skkeleton](https://github.com/vim-skk/skkeleton) (Japanese SKK input method).
 
-> **⚠️ AI Coding Assistant Users**: AI models may suggest outdated configurations. Always verify against this official documentation. Common issues: incorrect `sources.default`, missing Space key unmapping, or unnecessary `blink.compat`.
+> **💬 Note**: This plugin is developed with AI-assisted coding. While thoroughly tested, feedback and bug reports are welcome.
 
 ## ✨ Features
 
