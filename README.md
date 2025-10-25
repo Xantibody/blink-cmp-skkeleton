@@ -14,13 +14,7 @@ Native [blink.cmp](https://github.com/saghen/blink.cmp) source for [skkeleton](h
 
 ## 📦 Installation
 
-### Requirements
-
-- Neovim >= 0.10
-- [blink.cmp](https://github.com/saghen/blink.cmp)
-- [skkeleton](https://github.com/vim-skk/skkeleton)
-- [denops.vim](https://github.com/vim-denops/denops.vim)
-- [Deno](https://deno.land/) (for denops)
+**Requirements**: Neovim >= 0.10, [blink.cmp](https://github.com/saghen/blink.cmp), [skkeleton](https://github.com/vim-skk/skkeleton), [denops.vim](https://github.com/vim-denops/denops.vim), [Deno](https://deno.land/)
 
 ### Using [lazy.nvim](https://github.com/folke/lazy.nvim)
 
@@ -33,13 +27,8 @@ Native [blink.cmp](https://github.com/saghen/blink.cmp) source for [skkeleton](h
     "vim-denops/denops.vim",
   },
   opts = {
-    keymap = {
-      preset = "super-tab",
-      -- Don't use Space for completion - let skkeleton handle it
-      ["<Space>"] = {},
-    },
+    keymap = { ["<Space>"] = {} }, -- Required: Let skkeleton handle Space
     sources = {
-      -- Dynamically select sources based on skkeleton state
       default = function(ctx)
         if require("blink-cmp-skkeleton").is_enabled() then
           return { "skkeleton" }
@@ -51,8 +40,6 @@ Native [blink.cmp](https://github.com/saghen/blink.cmp) source for [skkeleton](h
         skkeleton = {
           name = "skkeleton",
           module = "blink-cmp-skkeleton",
-          score_offset = 100,
-          min_keyword_length = 0,
         },
       },
     },
@@ -60,54 +47,17 @@ Native [blink.cmp](https://github.com/saghen/blink.cmp) source for [skkeleton](h
 }
 ```
 
-### Skkeleton Configuration
-
-```lua
-{
-  "vim-skk/skkeleton",
-  dependencies = { "vim-denops/denops.vim" },
-  config = function()
-    vim.fn["skkeleton#config"]({
-      eggLikeNewline = true,
-      registerConvertResult = true,
-      sources = { "skk_server" },
-      showCandidatesCount = 999, -- Prevent auto-conversion
-    })
-
-    -- Key mappings
-    vim.keymap.set("i", "<C-j>", "<Plug>(skkeleton-enable)")
-    vim.keymap.set("c", "<C-j>", "<Plug>(skkeleton-enable)")
-  end,
-}
-```
+> **Note**: For skkeleton setup, see [skkeleton documentation](https://github.com/vim-skk/skkeleton).
 
 ## 🚀 Usage
 
-1. **Enable skkeleton**: Press `<C-j>` (or your configured key)
-2. **Type in hiragana**: e.g., "▽あいざわ"
-3. **Select completion**: Candidates appear automatically
-4. **Confirm**: Press `Tab` or `Enter`
-5. **Okurigana conversion**: Use `Space` for traditional SKK behavior
+1. Press `<C-j>` to enable skkeleton
+2. Type in hiragana (e.g., "▽あいざわ")
+3. Select candidate with `Tab` or `Enter`
 
-### Conversion Types
+**Okurigana conversion**: Use `Space` for traditional SKK behavior (e.g., `▽おくr` → `▽おく*り`).
 
-#### Okurinasi (送りなし変換)
-
-Type: `▽あいざわ`
-
-- Completion window shows multiple candidates
-- Select with Tab/Enter
-- Automatically registered to dictionary
-
-#### Okuriari (送りあり変換)
-
-Type: `▽おくr` → `▽おく*り`
-
-- Uses traditional SKK space-key conversion
-- Completion window doesn't appear (by skkeleton's design)
-- Automatically registered to dictionary with okuriari type
-
-> **Note**: Okurigana conversion doesn't show the completion window due to skkeleton's internal state management. This is the same behavior as the official ddc.vim source.
+> **Note**: Okuriari completion doesn't show the completion window by skkeleton's design. This matches the official ddc.vim source behavior.
 
 ## ⚙️ Configuration
 
