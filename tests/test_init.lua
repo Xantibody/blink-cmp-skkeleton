@@ -399,14 +399,26 @@ T["setup"]["sets auto_setup option"] = function()
   vim.g.blink_cmp_skkeleton_auto_setup = old_auto
 end
 
-T["setup"]["handles nil options gracefully"] = function()
-  local old_sync = vim.g.blink_cmp_skkeleton_sync_keymap
-
+T["setup"]["sets default values when opts is empty"] = function()
   source_module.setup({})
-  -- Should not change existing value
-  expect.equality(vim.g.blink_cmp_skkeleton_sync_keymap, old_sync)
 
-  vim.g.blink_cmp_skkeleton_sync_keymap = old_sync
+  -- Should set default values
+  expect.equality(vim.g.blink_cmp_skkeleton_sync_keymap, false)
+  expect.equality(vim.g.blink_cmp_skkeleton_debug, false)
+  expect.equality(vim.g.blink_cmp_skkeleton_cache_ttl, 100)
+  expect.equality(vim.g.blink_cmp_skkeleton_auto_setup, true)
+end
+
+T["setup"]["allows partial options with defaults"] = function()
+  source_module.setup({ sync_keymap = true })
+
+  -- Should set specified value
+  expect.equality(vim.g.blink_cmp_skkeleton_sync_keymap, true)
+
+  -- Should use defaults for others
+  expect.equality(vim.g.blink_cmp_skkeleton_debug, false)
+  expect.equality(vim.g.blink_cmp_skkeleton_cache_ttl, 100)
+  expect.equality(vim.g.blink_cmp_skkeleton_auto_setup, true)
 end
 
 T["setup"]["validates sync_keymap type"] = function()

@@ -13,42 +13,43 @@ local source = {}
 --- Setup plugin configuration
 --- @param opts? { sync_keymap?: boolean, debug?: boolean, cache_ttl?: number, auto_setup?: boolean }
 function source.setup(opts)
-  opts = opts or {}
+  -- Merge with defaults
+  local defaults = {
+    sync_keymap = false,
+    debug = false,
+    cache_ttl = 100,
+    auto_setup = true,
+  }
+  opts = vim.tbl_deep_extend("force", defaults, opts or {})
 
-  if opts.sync_keymap ~= nil then
-    if type(opts.sync_keymap) ~= "boolean" then
-      error("blink-cmp-skkeleton: sync_keymap must be a boolean, got " .. type(opts.sync_keymap))
-    end
-    vim.g.blink_cmp_skkeleton_sync_keymap = opts.sync_keymap
-
-    -- Sync keymap immediately if enabled
-    if opts.sync_keymap then
-      vim.schedule(function()
-        require("blink-cmp-skkeleton.keymaps").sync_to_skkeleton()
-      end)
-    end
+  -- Validate and set sync_keymap
+  if type(opts.sync_keymap) ~= "boolean" then
+    error("blink-cmp-skkeleton: sync_keymap must be a boolean, got " .. type(opts.sync_keymap))
+  end
+  vim.g.blink_cmp_skkeleton_sync_keymap = opts.sync_keymap
+  if opts.sync_keymap then
+    vim.schedule(function()
+      require("blink-cmp-skkeleton.keymaps").sync_to_skkeleton()
+    end)
   end
 
-  if opts.debug ~= nil then
-    if type(opts.debug) ~= "boolean" then
-      error("blink-cmp-skkeleton: debug must be a boolean, got " .. type(opts.debug))
-    end
-    vim.g.blink_cmp_skkeleton_debug = opts.debug
+  -- Validate and set debug
+  if type(opts.debug) ~= "boolean" then
+    error("blink-cmp-skkeleton: debug must be a boolean, got " .. type(opts.debug))
   end
+  vim.g.blink_cmp_skkeleton_debug = opts.debug
 
-  if opts.cache_ttl ~= nil then
-    if type(opts.cache_ttl) ~= "number" then
-      error("blink-cmp-skkeleton: cache_ttl must be a number, got " .. type(opts.cache_ttl))
-    end
-    vim.g.blink_cmp_skkeleton_cache_ttl = opts.cache_ttl
+  -- Validate and set cache_ttl
+  if type(opts.cache_ttl) ~= "number" then
+    error("blink-cmp-skkeleton: cache_ttl must be a number, got " .. type(opts.cache_ttl))
   end
+  vim.g.blink_cmp_skkeleton_cache_ttl = opts.cache_ttl
 
-  if opts.auto_setup ~= nil then
-    if type(opts.auto_setup) ~= "boolean" then
-      error("blink-cmp-skkeleton: auto_setup must be a boolean, got " .. type(opts.auto_setup))
-    end
-    vim.g.blink_cmp_skkeleton_auto_setup = opts.auto_setup
+  -- Validate and set auto_setup
+  if type(opts.auto_setup) ~= "boolean" then
+    error("blink-cmp-skkeleton: auto_setup must be a boolean, got " .. type(opts.auto_setup))
   end
+  vim.g.blink_cmp_skkeleton_auto_setup = opts.auto_setup
 end
 
 --- Check if skkeleton is currently enabled
