@@ -20,6 +20,13 @@ function source.setup(opts)
       error("blink-cmp-skkeleton: sync_keymap must be a boolean, got " .. type(opts.sync_keymap))
     end
     vim.g.blink_cmp_skkeleton_sync_keymap = opts.sync_keymap
+
+    -- Sync keymap immediately if enabled
+    if opts.sync_keymap then
+      vim.schedule(function()
+        require("blink-cmp-skkeleton.keymaps").sync_to_skkeleton()
+      end)
+    end
   end
 
   if opts.debug ~= nil then
