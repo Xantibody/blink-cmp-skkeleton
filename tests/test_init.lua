@@ -409,4 +409,36 @@ T["setup"]["handles nil options gracefully"] = function()
   vim.g.blink_cmp_skkeleton_sync_keymap = old_sync
 end
 
+T["setup"]["validates sync_keymap type"] = function()
+  expect.error(function()
+    source_module.setup({ sync_keymap = "true" })
+  end)
+
+  expect.error(function()
+    source_module.setup({ sync_keymap = 1 })
+  end)
+end
+
+T["setup"]["validates debug type"] = function()
+  expect.error(function()
+    source_module.setup({ debug = "true" })
+  end)
+end
+
+T["setup"]["validates cache_ttl type"] = function()
+  expect.error(function()
+    source_module.setup({ cache_ttl = "100" })
+  end)
+
+  expect.error(function()
+    source_module.setup({ cache_ttl = true })
+  end)
+end
+
+T["setup"]["validates auto_setup type"] = function()
+  expect.error(function()
+    source_module.setup({ auto_setup = "true" })
+  end)
+end
+
 return T

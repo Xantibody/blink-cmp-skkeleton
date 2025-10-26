@@ -16,18 +16,30 @@ function source.setup(opts)
   opts = opts or {}
 
   if opts.sync_keymap ~= nil then
+    if type(opts.sync_keymap) ~= "boolean" then
+      error("blink-cmp-skkeleton: sync_keymap must be a boolean, got " .. type(opts.sync_keymap))
+    end
     vim.g.blink_cmp_skkeleton_sync_keymap = opts.sync_keymap
   end
 
   if opts.debug ~= nil then
+    if type(opts.debug) ~= "boolean" then
+      error("blink-cmp-skkeleton: debug must be a boolean, got " .. type(opts.debug))
+    end
     vim.g.blink_cmp_skkeleton_debug = opts.debug
   end
 
   if opts.cache_ttl ~= nil then
+    if type(opts.cache_ttl) ~= "number" then
+      error("blink-cmp-skkeleton: cache_ttl must be a number, got " .. type(opts.cache_ttl))
+    end
     vim.g.blink_cmp_skkeleton_cache_ttl = opts.cache_ttl
   end
 
   if opts.auto_setup ~= nil then
+    if type(opts.auto_setup) ~= "boolean" then
+      error("blink-cmp-skkeleton: auto_setup must be a boolean, got " .. type(opts.auto_setup))
+    end
     vim.g.blink_cmp_skkeleton_auto_setup = opts.auto_setup
   end
 end
