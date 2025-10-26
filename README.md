@@ -24,13 +24,7 @@ Native [blink.cmp](https://github.com/saghen/blink.cmp) source for [skkeleton](h
 {
   "saghen/blink.cmp",
   dependencies = {
-    {
-      "Xantibody/blink-cmp-skkeleton",
-      opts = {
-        -- Optional: Sync blink.cmp keymap to skkeleton (default: false)
-        sync_keymap = true,
-      },
-    },
+    "Xantibody/blink-cmp-skkeleton",
     "vim-skk/skkeleton",
     "vim-denops/denops.vim",
   },
@@ -52,10 +46,19 @@ Native [blink.cmp](https://github.com/saghen/blink.cmp) source for [skkeleton](h
       },
     },
   },
+},
+{
+  "vim-skk/skkeleton",
+  config = function()
+    vim.fn["skkeleton#config"]({
+      -- Your skkeleton config here
+    })
+
+    -- Optional: Sync blink.cmp keymap to skkeleton for okurigana navigation
+    require("blink-cmp-skkeleton").sync_keymap_to_skkeleton()
+  end,
 }
 ```
-
-> **Note**: For skkeleton setup, see [skkeleton documentation](https://github.com/vim-skk/skkeleton).
 
 ## 🚀 Usage
 
@@ -69,11 +72,12 @@ Native [blink.cmp](https://github.com/saghen/blink.cmp) source for [skkeleton](h
 
 ## ⚙️ Configuration
 
-All options can be configured via `setup()` or `vim.g` variables:
+### Basic Options
+
+Options can be configured via `setup()` or `vim.g` variables:
 
 ```lua
 require('blink-cmp-skkeleton').setup({
-  sync_keymap = true,  -- Sync blink.cmp keys to skkeleton (default: false)
   debug = false,       -- Enable debug logging (default: false)
   cache_ttl = 100,     -- Cache TTL in milliseconds (default: 100)
   auto_setup = true,   -- Auto-setup autocmds (default: true)
@@ -82,21 +86,22 @@ require('blink-cmp-skkeleton').setup({
 
 ### Keymap Synchronization
 
-Automatically sync blink.cmp's `select_next`/`select_prev` keys to skkeleton's henkan navigation:
+Sync blink.cmp's `select_next`/`select_prev` keys to skkeleton's okurigana candidate navigation. Call this in your skkeleton config:
 
 ```lua
--- Enable in lazy.nvim
 {
-  "Xantibody/blink-cmp-skkeleton",
-  opts = { sync_keymap = true },
-}
+  "vim-skk/skkeleton",
+  config = function()
+    vim.fn["skkeleton#config"]({ ... })
 
--- Or via vim.g
-vim.g.blink_cmp_skkeleton_sync_keymap = true
+    -- Sync keymap after skkeleton is initialized
+    require("blink-cmp-skkeleton").sync_keymap_to_skkeleton()
+  end,
+}
 ```
 
 **How it works**:
-- Finds keys mapped to `select_next`/`select_prev` in blink.cmp (e.g., `<Tab>`, `<S-Tab>`)
+- Finds keys mapped to `select_next`/`select_prev` in blink.cmp (e.g., `<Down>`, `<C-n>` for super-tab preset)
 - Registers them to skkeleton's `henkanForward`/`henkanBackward` in henkan mode
 - Allows using the same keys for both okurinasi completion and okuriari candidate selection
 

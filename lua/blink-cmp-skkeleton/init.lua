@@ -11,11 +11,10 @@ local completion = require("blink-cmp-skkeleton.completion")
 local source = {}
 
 --- Setup plugin configuration
---- @param opts? { sync_keymap?: boolean, debug?: boolean, cache_ttl?: number, auto_setup?: boolean }
+--- @param opts? { debug?: boolean, cache_ttl?: number, auto_setup?: boolean }
 function source.setup(opts)
   -- Merge with defaults
   local defaults = {
-    sync_keymap = false,
     debug = false,
     cache_ttl = 100,
     auto_setup = true,
@@ -27,17 +26,6 @@ function source.setup(opts)
 
   local utils = require("blink-cmp-skkeleton.utils")
   utils.debug_log("setup() called with opts: " .. vim.inspect(opts))
-
-  -- Validate and set sync_keymap
-  if type(opts.sync_keymap) ~= "boolean" then
-    error("blink-cmp-skkeleton: sync_keymap must be a boolean, got " .. type(opts.sync_keymap))
-  end
-  vim.g.blink_cmp_skkeleton_sync_keymap = opts.sync_keymap
-  if opts.sync_keymap then
-    vim.schedule(function()
-      require("blink-cmp-skkeleton.keymaps").sync_to_skkeleton()
-    end)
-  end
 
   -- Validate and set debug
   if type(opts.debug) ~= "boolean" then
@@ -63,6 +51,13 @@ end
 --- @return boolean
 function source.is_enabled()
   return skkeleton.is_enabled()
+end
+
+--- Synchronize blink.cmp keymap to skkeleton henkan mode
+--- This should be called in skkeleton's config after skkeleton is initialized
+--- Maps blink.cmp's select_next/select_prev keys to skkeleton's henkanForward/henkanBackward
+function source.sync_keymap_to_skkeleton()
+  require("blink-cmp-skkeleton.keymaps").sync_to_skkeleton()
 end
 
 --- Create a new source instance

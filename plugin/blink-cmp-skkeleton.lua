@@ -38,10 +38,3 @@ vim.api.nvim_create_autocmd("TextChangedI", {
   end,
   desc = "Show blink.cmp when text changes while skkeleton is enabled",
 })
-
--- Sync keymap if enabled (opt-in, default: false)
-if vim.g.blink_cmp_skkeleton_sync_keymap == true then
-  vim.schedule(function()
-    require("blink-cmp-skkeleton.keymaps").sync_to_skkeleton()
-  end)
-end
