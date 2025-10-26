@@ -26,16 +26,28 @@ T["sync_to_skkeleton"]["registers keys to skkeleton"] = function()
   local old_fn = vim.fn
   local registered_keymaps = {}
 
-  -- Mock blink.cmp.config
-  local old_package_loaded = package.loaded["blink.cmp.config"]
+  -- Save old package.loaded entries
+  local old_config = package.loaded["blink.cmp.config"]
+  local old_keymap = package.loaded["blink.cmp.keymap"]
+
+  -- Mock blink.cmp.config (with preset only)
   package.loaded["blink.cmp.config"] = {
     keymap = {
-      preset = "default",
-      ["<Tab>"] = { "select_next", "fallback" },
-      ["<S-Tab>"] = { "select_prev" },
-      ["<C-n>"] = { "select_next" },
-      ["<C-p>"] = { "select_prev" },
+      preset = "super-tab",
     },
+  }
+
+  -- Mock blink.cmp.keymap with get_mappings function
+  package.loaded["blink.cmp.keymap"] = {
+    get_mappings = function(keymap_config, mode)
+      -- Return merged mappings as if preset was expanded
+      return {
+        ["<Tab>"] = { "select_next", "fallback" },
+        ["<S-Tab>"] = { "select_prev" },
+        ["<C-n>"] = { "select_next" },
+        ["<C-p>"] = { "select_prev" },
+      }
+    end,
   }
 
   -- Mock skkeleton#register_keymap
@@ -90,7 +102,8 @@ T["sync_to_skkeleton"]["registers keys to skkeleton"] = function()
 
   -- Cleanup
   vim.fn = old_fn
-  package.loaded["blink.cmp.config"] = old_package_loaded
+  package.loaded["blink.cmp.config"] = old_config
+  package.loaded["blink.cmp.keymap"] = old_keymap
 end
 
 return T

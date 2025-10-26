@@ -27,7 +27,7 @@ end
 function M.sync_to_skkeleton()
   local utils = require("blink-cmp-skkeleton.utils")
 
-  -- Check if blink.cmp is available
+  -- Check if blink.cmp config is available
   local ok, config = pcall(require, "blink.cmp.config")
   if not ok or not config.keymap then
     utils.debug_log("sync_to_skkeleton: blink.cmp.config not available")
@@ -36,9 +36,27 @@ function M.sync_to_skkeleton()
 
   utils.debug_log("sync_to_skkeleton: blink.cmp keymap preset = " .. (config.keymap.preset or "none"))
 
-  -- Find keys for next/prev commands
-  local next_keys = find_keys_for_command(config.keymap, "select_next")
-  local prev_keys = find_keys_for_command(config.keymap, "select_prev")
+  -- Get merged keymap from blink.cmp.keymap module
+  -- This expands presets into actual key mappings
+  local keymap_ok, keymap_module = pcall(require, "blink.cmp.keymap")
+  if not keymap_ok or not keymap_module.get_mappings then
+    utils.debug_log("sync_to_skkeleton: blink.cmp.keymap module not available")
+    return
+  end
+
+  local mappings_ok, mappings = pcall(keymap_module.get_mappings, config.keymap, "default")
+  if not mappings_ok then
+    utils.debug_log("sync_to_skkeleton: failed to get merged mappings")
+    return
+  end
+
+  utils.debug_log(
+    string.format("sync_to_skkeleton: got %d merged mappings from preset", vim.tbl_count(mappings))
+  )
+
+  -- Find keys for next/prev commands in merged mappings
+  local next_keys = find_keys_for_command(mappings, "select_next")
+  local prev_keys = find_keys_for_command(mappings, "select_prev")
 
   utils.debug_log(
     string.format("sync_to_skkeleton: found %d next keys, %d prev keys", #next_keys, #prev_keys)
