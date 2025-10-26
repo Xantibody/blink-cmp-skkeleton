@@ -9,6 +9,7 @@ Native [blink.cmp](https://github.com/saghen/blink.cmp) source for [skkeleton](h
 - ✅ Native blink.cmp integration (no `blink.compat` required)
 - ✅ Dynamic source switching (only shows when skkeleton is active)
 - ✅ Fuzzy matching support for Japanese characters
+- ✅ **Okurigana (送りがな) completion support** - Shows candidates during okurigana conversion
 - ✅ Dictionary learning for both okurinasi and okuriari
 - ✅ Proper pre-edit text replacement
 - ✅ **Performance optimization with intelligent caching** (~70% faster)
@@ -57,9 +58,7 @@ Native [blink.cmp](https://github.com/saghen/blink.cmp) source for [skkeleton](h
 2. Type in hiragana (e.g., "▽あいざわ")
 3. Select candidate with `Tab` or `Enter`
 
-**Okurigana conversion**: Use `Space` for traditional SKK behavior (e.g., `▽おくr` → `▽おく*り`).
-
-> **Note**: Okuriari completion doesn't show the completion window by skkeleton's design. This matches the official ddc.vim source behavior.
+**Okurigana conversion**: Use `Space` for traditional SKK behavior (e.g., `▽おくr` → `▽おく*り`). Completion candidates are now shown for okurigana conversion, similar to ddc.vim's `skkeleton_okuri` source.
 
 ## ⚙️ Configuration
 

@@ -117,6 +117,21 @@ function M.get_completion_data()
   return candidates, ranks_array, pre_edit
 end
 
+--- Get prefix from skkeleton (for okurigana processing)
+--- @return string
+function M.get_prefix()
+  return request("getPrefix") or ""
+end
+
+--- Get candidates from skkeleton with specific henkan type
+--- @param kana string
+--- @param henkan_type? "okuriari"|"okurinasi" Default: "okurinasi"
+--- @return table candidates
+function M.get_candidates(kana, henkan_type)
+  henkan_type = henkan_type or "okurinasi"
+  return request("getCandidates", { kana, henkan_type }) or {}
+end
+
 --- Register completion result with skkeleton for dictionary learning
 --- @param kana string
 --- @param word string

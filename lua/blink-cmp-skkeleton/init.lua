@@ -60,6 +60,82 @@ function source:get_completions(context, callback)
   -- Get completion data from skkeleton via denops
   local candidates, ranks_array, pre_edit = skkeleton.get_completion_data()
 
+  -- Check if this is okurigana mode
+  local is_okuriari = pre_edit:match("%*") or pre_edit:match("[A-Z]")
+
+  if is_okuriari then
+    utils.debug_log("Okurigana mode detected, fetching okuriari candidates")
+
+    -- Get prefix (kana before conversion)
+    local prefix = skkeleton.get_prefix()
+    utils.debug_log(string.format("prefix='%s'", prefix))
+
+    -- Try all possible splits
+    local all_candidates = {}
+    local splits = utils.okuri_splits(prefix)
+
+    for _, split in ipairs(splits) do
+      local word, okuri = split[1], split[2]
+      local midasi = utils.get_okuri_str(word, okuri)
+
+      utils.debug_log(string.format("Trying split: word='%s', okuri='%s', midasi='%s'", word, okuri, midasi))
+
+      -- Get candidates for this split
+      local cands = skkeleton.get_candidates(midasi, "okuriari")
+
+      -- Add okuri back to each candidate
+      for _, cand in ipairs(cands) do
+        local label = cand:gsub(";.*$", "")  -- Strip annotations
+        local with_okuri = label .. okuri
+
+        table.insert(all_candidates, {
+          word = with_okuri,
+          kana = prefix,
+          midasi = midasi,
+        })
+      end
+    end
+
+    utils.debug_log(string.format("Found %d okuriari candidates", #all_candidates))
+
+    -- Build completion items
+    local text_edit_range = completion.build_text_edit_range(context, pre_edit)
+    local items = {}
+    for i, cand in ipairs(all_candidates) do
+      table.insert(items, {
+        label = cand.word,
+        kind = vim.lsp.protocol.CompletionItemKind.Text,
+        insertTextFormat = vim.lsp.protocol.InsertTextFormat.PlainText,
+        textEdit = {
+          newText = cand.word,
+          range = text_edit_range,
+        },
+        filterText = cand.kana,
+        sortText = string.format("%05d", -i),
+        data = {
+          skkeleton = true,
+          kana = cand.kana,
+          word = cand.word,
+        },
+      })
+    end
+
+    utils.debug_log(string.format("returning %d okuriari items", #items))
+
+    -- Wrap callback in vim.schedule_wrap
+    local wrapped_callback = vim.schedule_wrap(function()
+      callback({
+        is_incomplete_forward = true,
+        is_incomplete_backward = true,
+        items = items,
+      })
+    end)
+
+    wrapped_callback()
+    return cancel_fun
+  end
+
+  -- Normal okurinasi mode
   -- Convert ranks and build items
   local ranks = completion.convert_ranks_to_map(ranks_array)
   local text_edit_range = completion.build_text_edit_range(context, pre_edit)
