@@ -25,22 +25,33 @@ end
 --- Synchronize blink.cmp keymap to skkeleton henkan mode
 --- Maps blink.cmp's select_next/select_prev keys to skkeleton's henkanForward/henkanBackward
 function M.sync_to_skkeleton()
+  local utils = require("blink-cmp-skkeleton.utils")
+
   -- Check if blink.cmp is available
   local ok, config = pcall(require, "blink.cmp.config")
   if not ok or not config.keymap then
+    utils.debug_log("sync_to_skkeleton: blink.cmp.config not available")
     return
   end
+
+  utils.debug_log("sync_to_skkeleton: blink.cmp keymap preset = " .. (config.keymap.preset or "none"))
 
   -- Find keys for next/prev commands
   local next_keys = find_keys_for_command(config.keymap, "select_next")
   local prev_keys = find_keys_for_command(config.keymap, "select_prev")
 
+  utils.debug_log(
+    string.format("sync_to_skkeleton: found %d next keys, %d prev keys", #next_keys, #prev_keys)
+  )
+
   -- Register keys to skkeleton henkan mode
   for _, key in ipairs(next_keys) do
+    utils.debug_log("sync_to_skkeleton: registering " .. key .. " -> henkanForward")
     vim.fn["skkeleton#register_keymap"]("henkan", key, "henkanForward")
   end
 
   for _, key in ipairs(prev_keys) do
+    utils.debug_log("sync_to_skkeleton: registering " .. key .. " -> henkanBackward")
     vim.fn["skkeleton#register_keymap"]("henkan", key, "henkanBackward")
   end
 end

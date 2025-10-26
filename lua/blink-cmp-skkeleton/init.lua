@@ -22,6 +22,12 @@ function source.setup(opts)
   }
   opts = vim.tbl_deep_extend("force", defaults, opts or {})
 
+  -- Set debug early so we can use it
+  vim.g.blink_cmp_skkeleton_debug = opts.debug
+
+  local utils = require("blink-cmp-skkeleton.utils")
+  utils.debug_log("setup() called with opts: " .. vim.inspect(opts))
+
   -- Validate and set sync_keymap
   if type(opts.sync_keymap) ~= "boolean" then
     error("blink-cmp-skkeleton: sync_keymap must be a boolean, got " .. type(opts.sync_keymap))

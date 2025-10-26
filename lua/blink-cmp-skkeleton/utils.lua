@@ -3,13 +3,10 @@
 
 local M = {}
 
--- Debug flag - set to true to enable logging
-local DEBUG = false
-
 --- Log debug message
 --- @param msg string
 function M.debug_log(msg)
-  if DEBUG then
+  if vim.g.blink_cmp_skkeleton_debug then
     vim.notify("[blink-cmp-skkeleton] " .. msg, vim.log.levels.INFO)
   end
 end
