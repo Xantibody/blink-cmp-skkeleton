@@ -348,4 +348,65 @@ T["execute"]["registers okuriari with asterisk"] = function()
   vim.fn = old_fn
 end
 
+-- setup tests
+T["setup"] = new_set()
+
+T["setup"]["sets sync_keymap option"] = function()
+  local old_sync = vim.g.blink_cmp_skkeleton_sync_keymap
+
+  source_module.setup({ sync_keymap = true })
+  expect.equality(vim.g.blink_cmp_skkeleton_sync_keymap, true)
+
+  source_module.setup({ sync_keymap = false })
+  expect.equality(vim.g.blink_cmp_skkeleton_sync_keymap, false)
+
+  vim.g.blink_cmp_skkeleton_sync_keymap = old_sync
+end
+
+T["setup"]["sets debug option"] = function()
+  local old_debug = vim.g.blink_cmp_skkeleton_debug
+
+  source_module.setup({ debug = true })
+  expect.equality(vim.g.blink_cmp_skkeleton_debug, true)
+
+  source_module.setup({ debug = false })
+  expect.equality(vim.g.blink_cmp_skkeleton_debug, false)
+
+  vim.g.blink_cmp_skkeleton_debug = old_debug
+end
+
+T["setup"]["sets cache_ttl option"] = function()
+  local old_ttl = vim.g.blink_cmp_skkeleton_cache_ttl
+
+  source_module.setup({ cache_ttl = 200 })
+  expect.equality(vim.g.blink_cmp_skkeleton_cache_ttl, 200)
+
+  source_module.setup({ cache_ttl = 50 })
+  expect.equality(vim.g.blink_cmp_skkeleton_cache_ttl, 50)
+
+  vim.g.blink_cmp_skkeleton_cache_ttl = old_ttl
+end
+
+T["setup"]["sets auto_setup option"] = function()
+  local old_auto = vim.g.blink_cmp_skkeleton_auto_setup
+
+  source_module.setup({ auto_setup = true })
+  expect.equality(vim.g.blink_cmp_skkeleton_auto_setup, true)
+
+  source_module.setup({ auto_setup = false })
+  expect.equality(vim.g.blink_cmp_skkeleton_auto_setup, false)
+
+  vim.g.blink_cmp_skkeleton_auto_setup = old_auto
+end
+
+T["setup"]["handles nil options gracefully"] = function()
+  local old_sync = vim.g.blink_cmp_skkeleton_sync_keymap
+
+  source_module.setup({})
+  -- Should not change existing value
+  expect.equality(vim.g.blink_cmp_skkeleton_sync_keymap, old_sync)
+
+  vim.g.blink_cmp_skkeleton_sync_keymap = old_sync
+end
+
 return T

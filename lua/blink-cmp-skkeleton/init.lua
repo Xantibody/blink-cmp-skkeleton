@@ -10,6 +10,28 @@ local completion = require("blink-cmp-skkeleton.completion")
 --- @class blink.cmp.Source
 local source = {}
 
+--- Setup plugin configuration
+--- @param opts? { sync_keymap?: boolean, debug?: boolean, cache_ttl?: number, auto_setup?: boolean }
+function source.setup(opts)
+  opts = opts or {}
+
+  if opts.sync_keymap ~= nil then
+    vim.g.blink_cmp_skkeleton_sync_keymap = opts.sync_keymap
+  end
+
+  if opts.debug ~= nil then
+    vim.g.blink_cmp_skkeleton_debug = opts.debug
+  end
+
+  if opts.cache_ttl ~= nil then
+    vim.g.blink_cmp_skkeleton_cache_ttl = opts.cache_ttl
+  end
+
+  if opts.auto_setup ~= nil then
+    vim.g.blink_cmp_skkeleton_auto_setup = opts.auto_setup
+  end
+end
+
 --- Check if skkeleton is currently enabled
 --- This is a public helper function for use in sources.default configuration
 --- @return boolean

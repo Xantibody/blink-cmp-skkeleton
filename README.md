@@ -12,7 +12,7 @@ Native [blink.cmp](https://github.com/saghen/blink.cmp) source for [skkeleton](h
 - ✅ Dictionary learning for both okurinasi and okuriari
 - ✅ Proper pre-edit text replacement
 - ✅ **Performance optimization with intelligent caching** (~70% faster)
-- ✅ Comprehensive test suite (47 tests)
+- ✅ Comprehensive test suite (54 tests)
 
 ## 📦 Installation
 
@@ -24,7 +24,13 @@ Native [blink.cmp](https://github.com/saghen/blink.cmp) source for [skkeleton](h
 {
   "saghen/blink.cmp",
   dependencies = {
-    "Xantibody/blink-cmp-skkeleton",
+    {
+      "Xantibody/blink-cmp-skkeleton",
+      opts = {
+        -- Optional: Sync blink.cmp keymap to skkeleton (default: false)
+        sync_keymap = true,
+      },
+    },
     "vim-skk/skkeleton",
     "vim-denops/denops.vim",
   },
@@ -63,14 +69,42 @@ Native [blink.cmp](https://github.com/saghen/blink.cmp) source for [skkeleton](h
 
 ## ⚙️ Configuration
 
+All options can be configured via `setup()` or `vim.g` variables:
+
+```lua
+require('blink-cmp-skkeleton').setup({
+  sync_keymap = true,  -- Sync blink.cmp keys to skkeleton (default: false)
+  debug = false,       -- Enable debug logging (default: false)
+  cache_ttl = 100,     -- Cache TTL in milliseconds (default: 100)
+  auto_setup = true,   -- Auto-setup autocmds (default: true)
+})
+```
+
+### Keymap Synchronization
+
+Automatically sync blink.cmp's `select_next`/`select_prev` keys to skkeleton's henkan navigation:
+
+```lua
+-- Enable in lazy.nvim
+{
+  "Xantibody/blink-cmp-skkeleton",
+  opts = { sync_keymap = true },
+}
+
+-- Or via vim.g
+vim.g.blink_cmp_skkeleton_sync_keymap = true
+```
+
+**How it works**:
+- Finds keys mapped to `select_next`/`select_prev` in blink.cmp (e.g., `<Tab>`, `<S-Tab>`)
+- Registers them to skkeleton's `henkanForward`/`henkanBackward` in henkan mode
+- Allows using the same keys for both okurinasi completion and okuriari candidate selection
+
 ### Cache Settings
 
 The plugin uses intelligent caching to reduce redundant denops RPC calls:
 
 ```lua
--- Customize cache TTL (default: 100ms)
-vim.g.blink_cmp_skkeleton_cache_ttl = 150
-
 -- Check cache statistics
 :lua print(vim.inspect(require('blink-cmp-skkeleton.skkeleton').get_cache_stats()))
 -- => { hits = 150, misses = 50, hit_rate = 75.0 }
@@ -84,19 +118,11 @@ vim.g.blink_cmp_skkeleton_cache_ttl = 150
 ### Debug Logging
 
 ```lua
--- Enable debug logging
-vim.g.blink_cmp_skkeleton_debug = true
-
 -- View logs
 :messages
 ```
 
 ### Auto-setup
-
-```lua
--- Disable automatic autocmd setup (advanced users only)
-vim.g.blink_cmp_skkeleton_auto_setup = false
-```
 
 > **Note**: The plugin automatically sets up autocmds to integrate with blink.cmp. Only disable this if you want to manage autocmds yourself.
 
