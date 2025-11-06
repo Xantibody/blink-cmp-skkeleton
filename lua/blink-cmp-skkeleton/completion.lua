@@ -31,7 +31,7 @@ function M.build_text_edit_range(context, pre_edit)
   local pre_edit_byte_len = #pre_edit
   local start_col = cursor_col - pre_edit_byte_len
 
-  return {
+  local range = {
     start = {
       line = cursor_line - 1, -- LSP uses 0-indexed lines
       character = start_col,
@@ -41,6 +41,10 @@ function M.build_text_edit_range(context, pre_edit)
       character = cursor_col,
     },
   }
+
+  -- Removed verbose debug log
+
+  return range
 end
 
 --- Build a single completion item
@@ -48,15 +52,16 @@ end
 --- @param word string
 --- @param rank number
 --- @param text_edit_range table
+--- @param filter_text string|nil Filter text for blink.cmp matching
 --- @return blink.cmp.CompletionItem
-function M.build_completion_item(kana, word, rank, text_edit_range)
+function M.build_completion_item(kana, word, rank, text_edit_range, filter_text)
   local label, info = utils.parse_word(word)
 
   local item = {
     label = label,
     kind = vim.lsp.protocol.CompletionItemKind.Text,
-    -- filterText: use kana so it matches the extracted keyword
-    filterText = kana,
+    -- filterText: use provided filter_text or fall back to kana
+    filterText = filter_text or kana,
     -- Use textEdit to replace the entire pre-edit text (including ▽)
     textEdit = {
       newText = label,
@@ -86,8 +91,9 @@ end
 --- @param candidates any[]
 --- @param ranks table<string, number>
 --- @param text_edit_range table
+--- @param filter_text string|nil Filter text for blink.cmp matching
 --- @return blink.cmp.CompletionItem[]
-function M.build_completion_items(candidates, ranks, text_edit_range)
+function M.build_completion_items(candidates, ranks, text_edit_range, filter_text)
   -- Sort candidates by kana (reading)
   table.sort(candidates, function(a, b)
     return a[1] < b[1]
@@ -100,7 +106,6 @@ function M.build_completion_items(candidates, ranks, text_edit_range)
 
   for _, cand in ipairs(candidates) do
     local kana = cand[1]
-    utils.debug_log(string.format("Building items for kana='%s', word_count=%d", kana, #cand[2]))
 
     for _, word in ipairs(cand[2]) do
       local rank = ranks[word] or globalRank
@@ -108,8 +113,7 @@ function M.build_completion_items(candidates, ranks, text_edit_range)
         globalRank = globalRank - 1
       end
 
-      local item = M.build_completion_item(kana, word, rank, text_edit_range)
-      utils.debug_log(string.format("  item: label='%s', rank=%d", item.label, rank))
+      local item = M.build_completion_item(kana, word, rank, text_edit_range, filter_text)
       table.insert(items, item)
     end
   end

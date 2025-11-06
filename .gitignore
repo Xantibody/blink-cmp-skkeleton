@@ -24,3 +24,8 @@ Thumbs.db
 
 # direnv
 .direnv/
+
+# AI
+.serena/
+.claude/
+specification.md
