@@ -214,6 +214,94 @@ T["get_completions"]["builds completion items correctly"] = function()
   vim.fn = old_fn
 end
 
+T["get_completions"]["handles continuation after accepting completion (相沢た scenario)"] = function()
+  local source = new_source()
+  local old_fn = vim.fn
+  local old_api = vim.api
+
+  -- Mock skkeleton state: user accepted "相沢" and typed "た"
+  vim.fn = setmetatable({}, {
+    __index = function(t, k)
+      if k == "skkeleton#is_enabled" then
+        return function()
+          return 1
+        end
+      end
+      if k == "denops#request" then
+        return function(plugin, method, args)
+          if method == "getCompletionResult" then
+            -- Candidates for "た" (たけし, たかし, etc.)
+            return { { "た", { "竹", "高", "田" } } }
+          elseif method == "getRanks" then
+            return {}
+          elseif method == "getPreEdit" then
+            -- pre_edit is just "た" (the new input after accepting 相沢)
+            return "た"
+          end
+        end
+      end
+      return old_fn[k]
+    end,
+  })
+
+  -- Mock current line state
+  vim.api = setmetatable({}, {
+    __index = function(t, k)
+      if k == "nvim_get_current_line" then
+        return function()
+          -- Current line has "相沢た" (accepted kanji + new hiragana)
+          return "相沢た"
+        end
+      end
+      if k == "nvim_win_get_cursor" then
+        return function()
+          -- Cursor at end (line 1, col 9 bytes: 相=3 + 沢=3 + た=3)
+          return { 1, 9 }
+        end
+      end
+      return old_api[k]
+    end,
+  })
+
+  local callback_called = false
+  local items = nil
+
+  -- Simulate blink.cmp context after accepting "相沢" and typing "た"
+  local context = {
+    cursor = { 1, 9 }, -- Cursor at end of "相沢た"
+    line = "相沢た",
+    bounds = {
+      start_col = 1, -- Bounds cover entire "相沢た"
+      length = 9, -- "相沢た" is 9 bytes
+    },
+  }
+
+  source:get_completions(context, function(response)
+    callback_called = true
+    items = response.items
+  end)
+
+  vim.wait(100)
+
+  expect.equality(callback_called, true)
+  expect.equality(#items, 3) -- Should return 3 candidates: 竹, 高, 田
+
+  -- Critical: filterText should be "相沢た" (from context.bounds)
+  -- NOT just "た" (from pre_edit)
+  -- This ensures blink.cmp's filtering matches the extracted keyword
+  expect.equality(items[1].filterText, "相沢た")
+  expect.equality(items[2].filterText, "相沢た")
+  expect.equality(items[3].filterText, "相沢た")
+
+  -- Labels should be the candidates
+  expect.equality(items[1].label, "竹")
+  expect.equality(items[2].label, "高")
+  expect.equality(items[3].label, "田")
+
+  vim.fn = old_fn
+  vim.api = old_api
+end
+
 -- resolve tests
 T["resolve"] = new_set()
 
