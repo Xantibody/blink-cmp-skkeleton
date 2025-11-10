@@ -83,12 +83,29 @@ vim.g.blink_cmp_skkeleton_cache_ttl = 150
 
 ### Debug Logging
 
+Enable detailed logging to diagnose completion issues:
+
 ```lua
 -- Enable debug logging
 vim.g.blink_cmp_skkeleton_debug = true
 
 -- View logs
 :messages
+```
+
+Debug logs include:
+- Completion trigger events (line, column, trigger type)
+- Pre-edit text and candidate counts
+- Cache hit/miss statistics
+- FilterText extraction from context.bounds
+- Dictionary learning operations
+
+Example debug output:
+```
+[blink-cmp-skkeleton] get_completions: line=1, col=9, trigger=trigger_character
+[blink-cmp-skkeleton] Cache MISS for 'た', fetching...
+[blink-cmp-skkeleton] pre_edit='た', candidates=1
+[blink-cmp-skkeleton] Returning 17 items for pre_edit='た'
 ```
 
 ### Auto-setup
@@ -107,6 +124,17 @@ vim.g.blink_cmp_skkeleton_auto_setup = false
 1. Check if skkeleton is enabled: `:echo skkeleton#is_enabled()`
 2. Check if blink.cmp source is loaded: `:lua =require('blink.cmp').sources`
 3. Enable debug logging: `vim.g.blink_cmp_skkeleton_debug = true`
+
+### Completion not showing after accepting item
+
+**Fixed in latest version**: If you experience issues where the completion menu doesn't appear after accepting a completion and continuing to type (e.g., selecting "相沢" then typing "た"), make sure you're using the latest version.
+
+This was caused by a mismatch between blink.cmp's keyword extraction (extracting the entire word like "相沢た") and the plugin's filterText (only "た"). The latest version automatically adjusts filterText based on `context.bounds` to match blink.cmp's keyword extraction.
+
+To verify the fix is working:
+1. Enable debug logging: `vim.g.blink_cmp_skkeleton_debug = true`
+2. After accepting a completion, continue typing
+3. Check `:messages` for logs showing candidates being returned
 
 ### Text is garbled after completion
 
@@ -163,8 +191,8 @@ plugin/
 The plugin implements the blink.cmp source API:
 
 - `enabled()`: Check if skkeleton is available
-- `get_trigger_characters()`: Return trigger characters (none for skkeleton)
-- `get_completions()`: Fetch and build completion items with caching
+- `get_trigger_characters()`: Return Japanese trigger characters (hiragana + katakana)
+- `get_completions()`: Fetch and build completion items with caching and context-aware filtering
 - `resolve()`: Resolve additional information (no-op)
 - `execute()`: Handle completion confirmation and dictionary learning
 
@@ -189,9 +217,15 @@ The most critical aspect is handling the difference between character count and 
 
 We use `#pre_edit` to get the actual byte length for correct `textEdit` range calculation.
 
-### Fuzzy Matching
+### Fuzzy Matching and Filtering
 
-Japanese hiragana/katakana characters match vim's `\k` pattern even though they're not explicitly in blink.cmp's `iskeyword` setting. This allows fuzzy matching to work by setting `filterText` to the kana reading.
+The plugin uses context-aware filtering to ensure compatibility with blink.cmp's keyword extraction:
+
+- `filterText` is dynamically set based on `context.bounds` when available
+- This ensures that blink.cmp's filtering matches the keyword it extracted
+- For example, when typing after "相沢", blink.cmp may extract "相沢た" as the keyword
+- The plugin sets `filterText='相沢た'` to match, preventing items from being filtered out
+- When `context.bounds` is not available, falls back to using the kana reading
 
 ### Dictionary Learning
 
