@@ -129,26 +129,11 @@ end
 -- get_trigger_characters tests
 T["get_trigger_characters"] = new_set()
 
-T["get_trigger_characters"]["returns Japanese trigger characters"] = function()
+T["get_trigger_characters"]["returns empty array"] = function()
   local source = new_source()
   local triggers = source:get_trigger_characters()
   expect.equality(type(triggers), "table")
-  -- Should have ~174 characters (hiragana + katakana)
-  expect.truthy(#triggers >= 170 and #triggers <= 180)
-  -- Should include hiragana
-  expect.truthy(vim.tbl_contains(triggers, "あ"))
-  expect.truthy(vim.tbl_contains(triggers, "ん"))
-  -- Should include katakana
-  expect.truthy(vim.tbl_contains(triggers, "ア"))
-  expect.truthy(vim.tbl_contains(triggers, "ン"))
-end
-
-T["get_trigger_characters"]["caches trigger characters"] = function()
-  local source = new_source()
-  local triggers1 = source:get_trigger_characters()
-  local triggers2 = source:get_trigger_characters()
-  -- Should return the same table reference (cached)
-  expect.equality(triggers1, triggers2)
+  expect.equality(#triggers, 0)
 end
 
 -- get_completions integration tests

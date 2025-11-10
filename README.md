@@ -191,7 +191,7 @@ plugin/
 The plugin implements the blink.cmp source API:
 
 - `enabled()`: Check if skkeleton is available
-- `get_trigger_characters()`: Return Japanese trigger characters (hiragana + katakana)
+- `get_trigger_characters()`: Return empty array (blink.cmp handles triggering)
 - `get_completions()`: Fetch and build completion items with caching and context-aware filtering
 - `resolve()`: Resolve additional information (no-op)
 - `execute()`: Handle completion confirmation and dictionary learning
