@@ -7,6 +7,9 @@ local utils = require("blink-cmp-skkeleton.utils")
 local skkeleton = require("blink-cmp-skkeleton.skkeleton")
 local completion = require("blink-cmp-skkeleton.completion")
 
+-- Module-level cache for trigger characters
+local trigger_characters_cache = nil
+
 --- @class blink.cmp.Source
 local source = {}
 
@@ -35,7 +38,14 @@ end
 --- Get trigger characters for completion
 --- @return string[]
 function source:get_trigger_characters()
-  return {}
+  -- Return hiragana and katakana characters as triggers
+  -- This ensures that completion is triggered after accepting a completion
+  -- and continuing to type Japanese characters
+  if not trigger_characters_cache then
+    trigger_characters_cache = utils.generate_japanese_triggers()
+    utils.debug_log(string.format("Generated %d trigger characters", #trigger_characters_cache))
+  end
+  return trigger_characters_cache
 end
 
 --- Get completions from skkeleton
