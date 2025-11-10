@@ -46,6 +46,16 @@ function source:get_completions(context, callback)
   -- Cancel function (no-op for now since we don't have async operations)
   local cancel_fun = function() end
 
+  -- Debug: Log basic information
+  utils.debug_log(
+    string.format(
+      "get_completions: line=%d, col=%d, trigger=%s",
+      context.cursor[1],
+      context.cursor[2],
+      context.trigger and context.trigger.kind or "nil"
+    )
+  )
+
   -- Check if skkeleton is enabled
   if not skkeleton.is_enabled() then
     utils.debug_log("skkeleton not enabled, returning empty")
@@ -62,10 +72,40 @@ function source:get_completions(context, callback)
 
   -- Convert ranks and build items
   local ranks = completion.convert_ranks_to_map(ranks_array)
-  local text_edit_range = completion.build_text_edit_range(context, pre_edit)
-  local items = completion.build_completion_items(candidates, ranks, text_edit_range)
 
-  utils.debug_log(string.format("returning %d items", #items))
+  -- Adjust text_edit_range based on context.bounds to match blink.cmp's keyword extraction
+  local text_edit_range
+  if context.bounds and pre_edit ~= "" then
+    -- Use bounds to determine the range, but only replace the pre_edit portion
+    local cursor_col = context.cursor[2]
+    local pre_edit_byte_len = #pre_edit
+    text_edit_range = {
+      start = {
+        line = context.cursor[1] - 1,
+        character = cursor_col - pre_edit_byte_len,
+      },
+      ["end"] = {
+        line = context.cursor[1] - 1,
+        character = cursor_col,
+      },
+    }
+  else
+    text_edit_range = completion.build_text_edit_range(context, pre_edit)
+  end
+
+  -- Get filterText from context.bounds if available
+  -- This ensures blink.cmp's filtering matches the keyword it extracted
+  local filter_text = pre_edit
+  if context.bounds and context.bounds.length > 0 then
+    local current_line = vim.api.nvim_get_current_line()
+    local start_byte = context.bounds.start_col - 1
+    local length_bytes = context.bounds.length
+    filter_text = current_line:sub(start_byte + 1, start_byte + length_bytes)
+  end
+
+  local items = completion.build_completion_items(candidates, ranks, text_edit_range, filter_text)
+
+  utils.debug_log(string.format("Returning %d items for pre_edit='%s'", #items, pre_edit))
 
   -- Wrap callback in vim.schedule_wrap
   local wrapped_callback = vim.schedule_wrap(function()
