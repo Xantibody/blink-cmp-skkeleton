@@ -1,6 +1,12 @@
 --- Auto-setup autocmds for blink.cmp integration with skkeleton
 --- Set vim.g.blink_cmp_skkeleton_auto_setup = false to disable
 
+-- Teach skkeleton how to talk to blink.cmp. This only makes the backend
+-- selectable; it takes effect once the user sets
+--   call skkeleton#config(#{ completionBackend: 'blink.cmp' })
+-- so it is registered even when auto-setup is disabled.
+require("blink-cmp-skkeleton.backend").setup()
+
 -- Check if user wants to disable auto-setup
 if vim.g.blink_cmp_skkeleton_auto_setup == false then
   return

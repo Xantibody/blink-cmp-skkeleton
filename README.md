@@ -63,6 +63,21 @@ Native [blink.cmp](https://github.com/saghen/blink.cmp) source for [skkeleton](h
 
 ## ⚙️ Configuration
 
+### Confirming a candidate with `<CR>`
+
+skkeleton's `eggLikeNewline` confirms the highlighted candidate with `<CR>` instead of inserting a newline. skkeleton does not guess which completion engine is on screen, so tell it to use blink.cmp:
+
+```lua
+vim.fn["skkeleton#config"]({
+  eggLikeNewline = true,
+  completionBackend = "blink.cmp",
+})
+```
+
+This plugin registers the `blink.cmp` backend with skkeleton automatically, so only the `completionBackend` line above is up to you. Without it skkeleton talks to the built-in popup menu and `<CR>` will not confirm a blink.cmp candidate.
+
+> **Note**: Requires a skkeleton with `skkeleton#register_completion_backend()`. On older versions the registration is skipped silently and `completionBackend` does not exist.
+
 ### Cache Settings
 
 The plugin uses intelligent caching to reduce redundant denops RPC calls:
@@ -236,6 +251,12 @@ The plugin automatically detects the henkan type:
 - Otherwise → okurinasi
 
 This information is passed to skkeleton's `completeCallback` for proper dictionary registration.
+
+### Completion Backend Registration
+
+`backend.register()` runs from `skkeleton-enable-pre`, the hook skkeleton documents for setting itself up. skkeleton only consults the backend while a completion menu is open, so registering there is early enough.
+
+This does mean the plugin has to be loaded by then. If your plugin manager only loads it when blink.cmp first asks for its source, skkeleton reports `unknown completionBackend` and stays on `native`. Loading it together with blink.cmp — as in the installation example above — avoids that.
 
 </details>
 
