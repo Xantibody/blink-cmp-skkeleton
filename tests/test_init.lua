@@ -312,6 +312,44 @@ T["execute"]["registers okurinasi with skkeleton"] = function()
   expect.equality(request_args[1], "あい")
   expect.equality(request_args[2], "愛")
   expect.equality(request_args[3], "okurinasi")
+  -- what has been inserted, which lets skkeleton take the completion back.
+  -- This item carries neither a textEdit nor a label, so the entry stands in
+  expect.equality(request_args[4], "愛")
+
+  vim.fn = old_fn
+end
+
+T["execute"]["reports the inserted text, annotation excluded"] = function()
+  local source = new_source()
+  local old_fn = vim.fn
+  local request_args = nil
+
+  vim.fn = setmetatable({}, {
+    __index = function(t, k)
+      if k == "denops#request" then
+        return function(plugin, method, args)
+          if method == "completeCallback" then
+            request_args = args
+          end
+        end
+      end
+      return old_fn[k]
+    end,
+  })
+
+  source:execute({}, {
+    label = "愛",
+    textEdit = { newText = "愛" },
+    data = {
+      skkeleton = true,
+      kana = "あい",
+      word = "愛;love",
+    },
+  }, function() end, function() end)
+
+  -- the entry is learned as it stands, the buffer got the text edit
+  expect.equality(request_args[2], "愛;love")
+  expect.equality(request_args[4], "愛")
 
   vim.fn = old_fn
 end

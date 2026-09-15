@@ -32,6 +32,23 @@ function M.parse_word(word)
   return label, info
 end
 
+--- What has been inserted into the buffer for an item.
+---
+--- skkeleton needs this to take a completion back with its kakutei undo
+--- (`skkeleton-functions-kakuteiUndo`): the completion engine writes to the
+--- buffer itself, so nothing else tells skkeleton how much of it the
+--- confirmation owns. The dictionary entry cannot stand in for it, as it
+--- carries an annotation and does not carry the okurigana.
+--- @param item blink.cmp.CompletionItem
+--- @return string
+function M.inserted_text(item)
+  local text = item.textEdit and item.textEdit.newText or item.label
+  if text == nil and item.data and item.data.word then
+    text = M.parse_word(item.data.word)
+  end
+  return text or ""
+end
+
 --- Determine henkan type from kana string
 --- @param kana string
 --- @return "okuriari"|"okurinasi"

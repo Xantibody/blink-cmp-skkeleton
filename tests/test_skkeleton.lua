@@ -115,12 +115,13 @@ T["register_completion"]["calls denops request"] = function()
     end,
   })
 
-  skkeleton.register_completion("あい", "愛", "okurinasi")
+  skkeleton.register_completion("あい", "愛", "okurinasi", "愛")
 
   expect.equality(called, true)
   expect.equality(call_args[1], "あい")
   expect.equality(call_args[2], "愛")
   expect.equality(call_args[3], "okurinasi")
+  expect.equality(call_args[4], "愛")
 
   vim.fn = old_fn
   skkeleton.clear_cache()

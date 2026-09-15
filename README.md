@@ -10,6 +10,7 @@ Native [blink.cmp](https://github.com/saghen/blink.cmp) source for [skkeleton](h
 - ✅ Dynamic source switching (only shows when skkeleton is active)
 - ✅ Fuzzy matching support for Japanese characters
 - ✅ Dictionary learning for both okurinasi and okuriari
+- ✅ Learns a candidate selected and left standing, like other SKK implementations
 - ✅ Proper pre-edit text replacement
 - ✅ **Performance optimization with intelligent caching** (~70% faster)
 - ✅ Comprehensive test suite (47 tests)
@@ -62,6 +63,21 @@ Native [blink.cmp](https://github.com/saghen/blink.cmp) source for [skkeleton](h
 > **Note**: Okuriari completion doesn't show the completion window by skkeleton's design. This matches the official ddc.vim source behavior.
 
 ## ⚙️ Configuration
+
+### Learning a candidate confirmed without `<CR>`
+
+Select a candidate (`<C-n>`, or whatever you bound `select_next` to) and carry on typing. `auto_insert` has already put the text in the buffer and nothing takes it back, so as far as you are concerned the candidate is confirmed. blink.cmp disagrees: `source:execute()` only runs on `accept`, so skkeleton would never hear about it and the candidate would stay where it was in the list next time.
+
+Other SKK implementations do not have this gap. They have no "selected but not confirmed" state at all: in macSKK typing on from candidate selection commits and learns in `fixCurrentSelect()`, and skkeleton's own ddc source gets the same for free because `CompleteDone` fires whenever the popup closes with an item inserted.
+
+This plugin closes the gap, so no extra keystroke is needed:
+
+```lua
+-- Disable if you would rather only learn on an explicit accept
+vim.g.blink_cmp_skkeleton_auto_confirm = false
+```
+
+Nothing is learned when you only look at a candidate — the automatic preselect of the first entry does not count — nor when you cancel with `<C-e>`, which rolls the text back.
 
 ### Cache Settings
 
@@ -236,6 +252,25 @@ The plugin automatically detects the henkan type:
 - Otherwise → okurinasi
 
 This information is passed to skkeleton's `completeCallback` for proper dictionary registration.
+
+### Learning Without `accept`
+
+`source:execute()` is reached only from blink.cmp's `accept` path, so `autoconfirm.lua` subscribes to the completion list instead.
+
+The state that says "the user chose this" is only intact at the moment of selection, so that is where it is recorded — the reading, the dictionary entry, and where in the buffer the preview put the text. It cannot be read later: as soon as the user types on, `list.show()` calls `undo_preview()` and, because the keyword bounds moved, clears `is_explicitly_selected`.
+
+| At select time | Why |
+| --- | --- |
+| `list.is_explicitly_selected` | `false` for the automatic preselect of the first entry, so opening the menu never records a choice. It also tells a deliberate deselect (stepping off the top of the list) from a preselect, which is why a preselect leaves an earlier choice pending instead of settling it |
+| `list.preview_undo.cursor_after` | where the previewed text ends, so it can be recognised again later |
+
+What decides it when the session ends is the buffer: the candidate is learned only if its text is still standing where the preview put it. That single check covers everything that must *not* be learned, because blink.cmp calls `undo_preview()` before it hides in every one of those cases:
+
+- **`accept`** restores the pre-preview text and applies the real edit only later, after `resolve`, so nothing is standing when the hide arrives — and `source:execute()` learns it anyway
+- **`cancel`** rolls the text back and leaves it that way
+- **moving the selection** replaces the text with the next candidate's, so the one being left behind no longer stands
+
+`blink.cmp.completion.list` is not a documented interface. Its emitters are used rather than the equivalent `BlinkCmpListSelect` / `BlinkCmpHide` autocmds because those are `vim.schedule`d, by which point the buffer and the state above have moved on. All of it is confined to `autoconfirm.lua`.
 
 </details>
 

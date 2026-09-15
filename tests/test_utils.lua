@@ -29,6 +29,28 @@ T["parse_word"]["handles multiple semicolons"] = function()
   expect.equality(info, "affection") -- Only last part after final semicolon
 end
 
+-- inserted_text tests
+T["inserted_text"] = new_set()
+
+T["inserted_text"]["prefers the text edit"] = function()
+  local item = { textEdit = { newText = "愛" }, label = "label", data = { word = "愛;love" } }
+  expect.equality(utils.inserted_text(item), "愛")
+end
+
+T["inserted_text"]["falls back to the label"] = function()
+  local item = { label = "愛", data = { word = "愛;love" } }
+  expect.equality(utils.inserted_text(item), "愛")
+end
+
+T["inserted_text"]["falls back to the entry without its annotation"] = function()
+  local item = { data = { word = "愛;love" } }
+  expect.equality(utils.inserted_text(item), "愛")
+end
+
+T["inserted_text"]["is empty when nothing says what was inserted"] = function()
+  expect.equality(utils.inserted_text({}), "")
+end
+
 -- determine_henkan_type tests
 T["determine_henkan_type"] = new_set()
 

@@ -254,9 +254,12 @@ end
 --- @param kana string
 --- @param word string
 --- @param henkan_type "okuriari"|"okurinasi"
-function M.register_completion(kana, word, henkan_type)
+--- @param inserted string|nil what has been inserted into the buffer, which
+---   lets skkeleton take the confirmation back with its kakutei undo. An older
+---   skkeleton ignores it.
+function M.register_completion(kana, word, henkan_type, inserted)
   utils.debug_log(string.format("register: kana=%s, word=%s, type=%s", kana, word, henkan_type))
-  request("completeCallback", { kana, word, henkan_type })
+  request("completeCallback", { kana, word, henkan_type, inserted or "" })
 
   -- Clear cache after dictionary learning (ranks may change)
   M.clear_cache()
