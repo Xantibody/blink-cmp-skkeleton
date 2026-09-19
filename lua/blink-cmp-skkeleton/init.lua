@@ -143,7 +143,7 @@ function source:execute(context, item, callback, default_implementation)
 
   -- Then, register the result with skkeleton for dictionary learning
   local henkan_type = utils.determine_henkan_type(item.data.kana)
-  skkeleton.register_completion(item.data.kana, item.data.word, henkan_type)
+  skkeleton.register_completion(item.data.kana, item.data.word, henkan_type, utils.inserted_text(item))
 
   callback()
 end

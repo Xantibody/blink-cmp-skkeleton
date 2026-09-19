@@ -61,6 +61,14 @@ Native [blink.cmp](https://github.com/saghen/blink.cmp) source for [skkeleton](h
 
 > **Note**: Okuriari completion doesn't show the completion window by skkeleton's design. This matches the official ddc.vim source behavior.
 
+**Taking a confirmation back**: skkeleton's `kakuteiUndo` puts a confirmed candidate back into the candidate selection (▼) state, so a mis-picked one can be fixed without retyping the reading. It has no default mapping, so bind a free key which is also in `g:skkeleton#mapped_keys`:
+
+```lua
+vim.fn["skkeleton#register_keymap"]("input", "<C-z>", "kakuteiUndo")
+```
+
+This needs a skkeleton which has `kakuteiUndo` ([vim-skk/skkeleton#257](https://github.com/vim-skk/skkeleton/pull/257)). On an older one the completion is confirmed as before, only the undo is unavailable.
+
 ## ⚙️ Configuration
 
 ### Cache Settings
@@ -236,6 +244,8 @@ The plugin automatically detects the henkan type:
 - Otherwise → okurinasi
 
 This information is passed to skkeleton's `completeCallback` for proper dictionary registration.
+
+The text the item has written to the buffer is passed along as the 4th argument, which is what lets skkeleton take the confirmation back with `kakuteiUndo`. blink.cmp writes to the buffer itself, so nothing else tells skkeleton how much of it the confirmation owns — and the dictionary entry cannot stand in for it, as it carries an annotation and does not carry the okurigana. The argument is optional on the skkeleton side, so an older skkeleton simply ignores it.
 
 </details>
 
