@@ -1,3 +1,5 @@
+
+
 # blink-cmp-skkeleton
 
 Native [blink.cmp](https://github.com/saghen/blink.cmp) source for [skkeleton](https://github.com/vim-skk/skkeleton) (Japanese SKK input method).
@@ -245,7 +247,7 @@ This information is passed to skkeleton's `completeCallback` for proper dictiona
 
 ### Running Tests
 
-Requirements: [mini.nvim](https://github.com/echasnovski/mini.nvim) (mini.test)
+Requirements: [Just](https://github.com/casey/just), [mini.nvim](https://github.com/echasnovski/mini.nvim) (mini.test)
 
 ```bash
 # Clone the repository
